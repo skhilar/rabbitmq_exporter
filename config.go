@@ -34,7 +34,7 @@ var (
 		IncludeVHost:       regexp.MustCompile(".*"),
 		RabbitCapabilities: parseCapabilities("no_sort,bert"),
 		AlivenessVhost:     "/",
-		EnabledExporters:   []string{"exchange", "node", "overview", "queue"},
+		EnabledExporters:   []string{"exchange", "node", "overview", "queue", "cpu"},
 		Timeout:            30,
 		MaxQueues:          0,
 	}
@@ -71,6 +71,11 @@ type rabbitExporterConfig struct {
 	EnabledExporters         []string            `json:"enabled_exporters"`
 	Timeout                  int                 `json:"timeout"`
 	MaxQueues                int                 `json:"max_queues"`
+	ResourceID               string              `json:"-"`
+	ServiceInstanceGUID      string              `json:"-"`
+	ServiceNameSpace         string              `json:"-"`
+	PrometheusHost           string              `json:"-"`
+	PrometheusPort           string              `json:"-"`
 }
 
 type rabbitCapability string
@@ -242,6 +247,26 @@ func initConfig() {
 		}
 		config.MaxQueues = m
 	}
+	if resourceID := os.Getenv("RESOURCE_ID"); resourceID != "" {
+		config.ResourceID = resourceID
+	}
+
+	if serviceInstanceGuid := os.Getenv("SERVICE_INSTANCE_GUID"); serviceInstanceGuid != "" {
+		config.ServiceInstanceGUID = serviceInstanceGuid
+	}
+
+	if serviceNameSpace := os.Getenv("SERVICE_NAMESPACE"); serviceNameSpace != "" {
+		config.ServiceNameSpace = serviceNameSpace
+	}
+
+	if prometheusHost := os.Getenv("PROMETHEUS_HOST"); prometheusHost != "" {
+		config.PrometheusHost = prometheusHost
+	}
+
+	if prometheusPort := os.Getenv("PROMETHEUS_PORT"); prometheusPort != "" {
+		config.PrometheusPort = prometheusPort
+	}
+
 }
 
 func parseCapabilities(raw string) rabbitCapabilitySet {
@@ -264,8 +289,8 @@ func isCapEnabled(config rabbitExporterConfig, cap rabbitCapability) bool {
 
 func selfLabel(config rabbitExporterConfig, isSelf bool) string {
 	if config.RabbitConnection == "loadbalancer" {
-        return "lb"
-    } else if isSelf {
+		return "lb"
+	} else if isSelf {
 		return "1"
 	} else {
 		return "0"

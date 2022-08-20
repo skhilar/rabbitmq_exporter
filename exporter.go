@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -51,6 +52,8 @@ type Exporter interface {
 }
 
 func newExporter() *exporter {
+	fmt.Println("exporter enabled ", config.EnabledExporters)
+	fmt.Println("exporter factories ", exporterFactories)
 	enabledExporter := make(map[string]Exporter)
 	for _, e := range config.EnabledExporters {
 		if _, ok := exporterFactories[e]; ok {
